@@ -1,21 +1,81 @@
-import { StatusBar } from 'expo-status-bar';
-import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import React, { useEffect, useState } from "react";
+import { FlatList, Text, View } from "react-native";
+import { fakeServer } from "./fakeserver";
 
-export default function App() {
+const renderItem = ({ item }) => {
   return (
-    <View style={styles.container}>
-      <Text>Open up App.js to start working on your app!</Text>
-      <StatusBar style="auto" />
+    <Text
+      style={{
+        textAlign: "center",
+        fontWeight: "bold",
+        fontSize: 20,
+        padding: 10,
+        borderBottomColor: "red",
+        borderBottomWidth: 2,
+      }}
+    >
+      {item}
+    </Text>
+  );
+};
+
+const ListFooterComponent = () => {
+  return (
+    <View
+      style={{
+        flex: 1,
+        alignItems: "center",
+        justifyContent: "center",
+        marginBottom: 20,
+      }}
+    >
+      <Text style={{ fontSize: 16, fontWeight: "bold" }}>Loading...</Text>
     </View>
   );
-}
+};
+let StopfetchMore = true;
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
+export default function App() {
+  const [data, setdata] = useState([]);
+  const [isloading, setIsloading] = useState(false);
+  const fetchdata = async () => {
+    try {
+      const info = await fakeServer(20);
+      setdata([...info]);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  useEffect(() => {
+    fetchdata();
+  }, []);
+
+  const onhandleEndReached = async () => {
+    setIsloading(true);
+    if (!StopfetchMore) {
+      try {
+        const response = await fakeServer(20);
+        if (response === "done") return setIsloading(false);
+        setdata([...data, ...response]);
+        StopfetchMore = true;
+      } catch (error) {
+        console.log(error);
+      }
+    }
+    setIsloading(false);
+  };
+  return (
+    <FlatList
+      style={{ marginTop: 30 }}
+      data={data}
+      keyExtractor={(item) => item}
+      renderItem={renderItem}
+      onScrollBeginDrag={() => {
+        StopfetchMore = false;
+      }}
+      onEndReached={onhandleEndReached}
+      onEndReachedThreshold={0.01}
+      ListFooterComponent={() => isloading && <ListFooterComponent />}
+    />
+  );
+}
