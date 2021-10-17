@@ -1,11 +1,15 @@
 let arr = [];
 for (let i = 1; i < 300; i++) {
-  arr.push(`Item no: ${i}`);
+  if (i % 2 === 0) {
+    arr.push({ item: `Item no: ${i}`, type: "half" });
+  } else {
+    arr.push({ item: `Item no: ${i}`, type: "full" });
+  }
 }
 
 let lastItem = "";
 
-export const fakeServer = (qty) => {
+export default fakeServer = (qty) => {
   const result = new Promise((resolve, reject) => {
     let newArr;
     const lastItemIndex = arr.indexOf(lastItem);
